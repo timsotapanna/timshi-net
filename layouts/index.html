@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>{{ .Site.Title }}</title>
+  </head>
+  <body style="max-width:720px;margin:64px auto;font-family:system-ui;line-height:1.6;padding:0 16px;">
+    <h1 style="margin:0 0 8px;">{{ .Site.Title }}</h1>
+    {{ with .Site.Params.description }}<p style="margin:0 0 24px;opacity:.8;">{{ . }}</p>{{ end }}
+
+    <h2>Sections</h2>
+    <ul>
+      {{ range .Site.Sections }}
+        <li><a href="{{ .RelPermalink }}">{{ .Title }}</a></li>
+      {{ end }}
+    </ul>
+  </body>
+</html>

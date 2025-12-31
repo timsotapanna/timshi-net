@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>{{ .Title }} — {{ .Site.Title }}</title>
+  </head>
+  <body style="max-width:720px;margin:64px auto;font-family:system-ui;line-height:1.6;padding:0 16px;">
+    <p><a href="{{ "/" | relURL }}">← Home</a></p>
+    <h1>{{ .Title }}</h1>
+
+    {{ with .Content }}
+      <div>{{ . }}</div>
+    {{ end }}
+
+    <h2>Pages</h2>
+    <ul>
+      {{ range .RegularPagesRecursive }}
+        <li><a href="{{ .RelPermalink }}">{{ .Title }}</a></li>
+      {{ end }}
+    </ul>
+  </body>
+</html>
+

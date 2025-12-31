@@ -1,0 +1,8 @@
+baseURL = "https://timshi.net/"
+languageCode = "en-us"
+title = "Tim Shi"
+
+disableKinds = ["taxonomy", "term", "RSS", "sitemap"]
+
+[params]
+  description = "Personal long-term archive."

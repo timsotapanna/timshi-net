@@ -1,4 +1,6 @@
-# Pens
+---
+title: "Pens"
+---
 
 This section serves as an analytical archive of my fountain pen collection.
 

@@ -1,4 +1,7 @@
-# Notes
+---
+title: "Notes"
+---
+
 
 This section collects my ongoing thinking on systems, methods, and decision-making.
 

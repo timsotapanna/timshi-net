@@ -1,4 +1,7 @@
-# Archery
+---
+title: "Archery"
+---
+
 
 This section documents my long-term archery practice.
 

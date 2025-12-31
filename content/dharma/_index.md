@@ -1,4 +1,7 @@
-# Dharma
+---
+title: "Dharma"
+---
+
 
 This section records my engagement with Buddhist practice in daily life.
 
