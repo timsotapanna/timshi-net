@@ -1,0 +1,144 @@
+/* =========================
+   Base typography & layout
+   ========================= */
+
+html {
+  font-size: 16px;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  color: #111;
+  background: #fff;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont,
+               "Segoe UI", Roboto, Helvetica, Arial,
+               "Noto Sans", "PingFang SC", "Hiragino Sans GB",
+               "Microsoft YaHei", sans-serif;
+  line-height: 1.7;
+}
+
+/* =========================
+   Reading container
+   ========================= */
+
+article {
+  max-width: 68ch;          /* 字符宽度，而不是像素宽度 */
+  margin: 4rem auto;
+  padding: 0 1.25rem;
+}
+
+/* =========================
+   Headings
+   ========================= */
+
+article h1,
+article h2,
+article h3 {
+  line-height: 1.35;
+  font-weight: 600;
+}
+
+article h1 {
+  font-size: 1.6rem;
+  margin: 3rem 0 1.5rem;
+}
+
+article h2 {
+  font-size: 1.25rem;
+  margin: 2.5rem 0 1.2rem;
+}
+
+article h3 {
+  font-size: 1.1rem;
+  margin: 2rem 0 1rem;
+}
+
+/* =========================
+   Paragraphs & lists
+   ========================= */
+
+article p {
+  margin: 1.2rem 0;
+}
+
+article ul,
+article ol {
+  margin: 1.2rem 0 1.2rem 1.5rem;
+}
+
+article li {
+  margin: 0.4rem 0;
+}
+
+/* =========================
+   Blockquotes
+   ========================= */
+
+article blockquote {
+  margin: 2rem 0;
+  padding-left: 1rem;
+  border-left: 3px solid #ddd;
+  color: #555;
+}
+
+/* =========================
+   Images (book-style)
+   ========================= */
+
+article img {
+  display: block;
+  max-width: 85%;
+  height: auto;
+  margin: 2rem auto;
+}
+
+/* Optional: subtle material feeling */
+article img {
+  border-radius: 2px;
+}
+
+/* =========================
+   Horizontal rules
+   ========================= */
+
+article hr {
+  border: none;
+  border-top: 1px solid #eee;
+  margin: 3rem 0;
+}
+
+/* =========================
+   Links
+   ========================= */
+
+a {
+  color: #0044cc;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* =========================
+   Tables (minimal)
+   ========================= */
+
+article table {
+  border-collapse: collapse;
+  margin: 2rem auto;
+  max-width: 100%;
+}
+
+article th,
+article td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+}
+
+article th {
+  font-weight: 600;
+}
+
