@@ -11,10 +11,17 @@
     {{ with .Content }}
     <div>{{ . }}</div>
     {{ end }}
+    <h2>Tools</h2>
+    <ul>
+      <li><a href="/pens/ink-selector">Ink Selector</a></li>
+    </ul>
+    {{ if .RegularPagesRecursive }}
+    <h2>Pages</h2>
     <ul>
       {{ range .RegularPagesRecursive }}
       <li><a href="{{ .RelPermalink }}">{{ .Title }}</a></li>
       {{ end }}
     </ul>
+    {{ end }}
   </body>
 </html>
