@@ -1,0 +1,79 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>{{ .Title }} — {{ .Site.Title }}</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <style>
+      .version-history {
+        margin-top: 48px;
+        padding-top: 24px;
+        border-top: 1px solid #e0e0e0;
+        font-size: 0.85em;
+        color: #555;
+      }
+      .version-history h3 {
+        margin: 0 0 12px;
+        font-size: 0.95em;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #888;
+      }
+      .commit-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .commit-list li {
+        display: flex;
+        gap: 12px;
+        padding: 6px 0;
+        border-bottom: 1px solid #f0f0f0;
+        align-items: baseline;
+      }
+      .commit-list li:last-child { border-bottom: none; }
+      .commit-date { white-space: nowrap; color: #999; min-width: 90px; }
+      .commit-msg a { color: #333; text-decoration: none; }
+      .commit-msg a:hover { text-decoration: underline; }
+      .commit-first { font-style: italic; color: #aaa; font-size: 0.85em; }
+    </style>
+  </head>
+  <body style="max-width:720px;margin:64px auto;font-family:system-ui;line-height:1.6;padding:0 16px;">
+    <p><a href="{{ .Section | relURL }}">← {{ .Section }}</a></p>
+    <h1>{{ .Title }}</h1>
+    <article>{{ .Content }}</article>
+
+    <div class="version-history">
+      <h3>Version History</h3>
+      <div id="version-loading" style="color:#aaa;font-size:0.85em;">Loading…</div>
+      <ul class="commit-list" id="commit-list" style="display:none;"></ul>
+    </div>
+
+    <script>
+      (async function () {
+        const parts = window.location.pathname.replace(/\/$/, '').split('/').filter(Boolean);
+        const filePath = 'content/' + parts.join('/') + '/index.md';
+        const repo = 'timsotapanna/timshi-net';
+        const apiUrl = `https://api.github.com/repos/${repo}/commits?path=${encodeURIComponent(filePath)}&per_page=20`;
+        const loadingEl = document.getElementById('version-loading');
+        const listEl = document.getElementById('commit-list');
+        try {
+          const res = await fetch(apiUrl, { headers: { 'Accept': 'application/vnd.github.v3+json' } });
+          if (!res.ok) throw new Error();
+          const commits = await res.json();
+          if (!commits.length) { loadingEl.textContent = 'No history found.'; return; }
+          loadingEl.style.display = 'none';
+          listEl.style.display = 'block';
+          commits.forEach((c, i) => {
+            const date = new Date(c.commit.author.date).toLocaleDateString('en-CA');
+            const msg = c.commit.message.split('\n')[0];
+            const li = document.createElement('li');
+            li.innerHTML = `<span class="commit-date">${date}</span><span class="commit-msg"><a href="${c.html_url}" target="_blank" rel="noopener">${msg}</a>${i === commits.length - 1 ? ' <span class="commit-first">(initial)</span>' : ''}</span>`;
+            listEl.appendChild(li);
+          });
+        } catch { loadingEl.textContent = 'Could not load history.'; }
+      })();
+    </script>
+  </body>
+</html>
