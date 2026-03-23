@@ -1,0 +1,164 @@
+{{ define "main" }}
+<style>
+  .dharma-search-wrap {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    font-family: inherit;
+  }
+  .dharma-search-wrap h1 {
+    font-size: 1.4rem;
+    margin-bottom: 0.5rem;
+  }
+  .dharma-desc {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+  }
+  .lang-toggle {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.2rem;
+  }
+  .lang-btn {
+    padding: 0.3rem 0.9rem;
+    border: 1px solid #ccc;
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+  }
+  .lang-btn.active {
+    background: #111;
+    color: white;
+    border-color: #111;
+  }
+  .search-box {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    resize: vertical;
+    min-height: 80px;
+    font-family: inherit;
+    margin-bottom: 0.8rem;
+  }
+  .search-btn {
+    padding: 0.6rem 1.6rem;
+    background: #111;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  .search-btn:disabled {
+    background: #999;
+    cursor: not-allowed;
+  }
+  .result-wrap {
+    margin-top: 2rem;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    font-size: 0.95rem;
+  }
+  .loading {
+    color: #888;
+    font-style: italic;
+    margin-top: 1.5rem;
+  }
+  .error {
+    color: #c00;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+  }
+</style>
+
+<div class="dharma-search-wrap">
+  <h1 id="page-title">佛经索引</h1>
+  <p class="dharma-desc" id="page-desc">
+    输入任何经文、概念、情绪或日常语句，找出上座部、大乘、藏传三系对应经文。
+  </p>
+
+  <div class="lang-toggle">
+    <button class="lang-btn active" id="btn-zh" onclick="setLang('zh')">中文</button>
+    <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+  </div>
+
+  <textarea class="search-box" id="query-input" placeholder="例如：一切有为法 如梦幻泡影｜我现在不平静｜期待是一种自我折磨"></textarea>
+  <br>
+  <button class="search-btn" id="search-btn" onclick="doSearch()">索引</button>
+
+  <div class="loading" id="loading" style="display:none">正在寻找对应经文...</div>
+  <div class="error" id="error-msg"></div>
+  <div class="result-wrap" id="result"></div>
+</div>
+
+<script>
+  let currentLang = 'zh';
+
+  const labels = {
+    zh: {
+      title: '佛经索引',
+      desc: '输入任何经文、概念、情绪或日常语句，找出上座部、大乘、藏传三系对应经文。',
+      placeholder: '例如：一切有为法 如梦幻泡影｜我现在不平静｜期待是一种自我折磨',
+      btn: '索引',
+      loading: '正在寻找对应经文...',
+    },
+    en: {
+      title: 'Dharma Index',
+      desc: 'Enter any scripture, concept, emotion, or everyday phrase to find corresponding passages from Theravada, Mahayana, and Vajrayana traditions.',
+      placeholder: 'e.g. All conditioned things are impermanent | I feel restless | Expectation is self-inflicted suffering',
+      btn: 'Search',
+      loading: 'Searching for related passages...',
+    }
+  };
+
+  function setLang(lang) {
+    currentLang = lang;
+    document.getElementById('btn-zh').classList.toggle('active', lang === 'zh');
+    document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+    document.getElementById('page-title').textContent = labels[lang].title;
+    document.getElementById('page-desc').textContent = labels[lang].desc;
+    document.getElementById('query-input').placeholder = labels[lang].placeholder;
+    document.getElementById('search-btn').textContent = labels[lang].btn;
+    document.getElementById('loading').textContent = labels[lang].loading;
+    document.getElementById('result').textContent = '';
+    document.getElementById('error-msg').textContent = '';
+  }
+
+  async function doSearch() {
+    const query = document.getElementById('query-input').value.trim();
+    if (!query) return;
+
+    document.getElementById('result').textContent = '';
+    document.getElementById('error-msg').textContent = '';
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('search-btn').disabled = true;
+
+    try {
+      const res = await fetch('https://dharma-search.timshi.workers.dev', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, lang: currentLang }),
+      });
+      const data = await res.json();
+      document.getElementById('result').textContent = data.result;
+    } catch (err) {
+      document.getElementById('error-msg').textContent = currentLang === 'zh'
+        ? '出现错误，请稍后再试。'
+        : 'An error occurred. Please try again.';
+    } finally {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('search-btn').disabled = false;
+    }
+  }
+
+  document.getElementById('query-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) doSearch();
+  });
+</script>
+{{ end }}
