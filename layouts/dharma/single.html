@@ -15,6 +15,9 @@
       .search-btn { padding: 0.6rem 1.6rem; background: #111; color: white; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; }
       .search-btn:disabled { background: #999; cursor: not-allowed; }
       .result-wrap { margin-top: 2rem; line-height: 1.8; white-space: pre-wrap; font-size: 0.95rem; }
+      .copy-btn { margin-top: 1rem; padding: 0.4rem 1.2rem; background: white; color: #111; border: 1px solid #ccc; border-radius: 6px; font-size: 0.85rem; cursor: pointer; display: none; }
+      .copy-btn:hover { background: #f5f5f5; }
+      .copy-btn.copied { color: #4caf50; border-color: #4caf50; }
       .loading { color: #888; font-style: italic; margin-top: 1.5rem; }
       .error { color: #c00; margin-top: 1rem; font-size: 0.9rem; }
     </style>
@@ -34,6 +37,7 @@
       <div class="loading" id="loading" style="display:none">正在寻找对应经文...</div>
       <div class="error" id="error-msg"></div>
       <div class="result-wrap" id="result"></div>
+      <button class="copy-btn" id="copy-btn" onclick="copyResult()">复制 / Copy</button>
     </div>
     <script>
       let currentLang = 'zh';
@@ -52,12 +56,14 @@
         document.getElementById('loading').textContent = labels[lang].loading;
         document.getElementById('result').textContent = '';
         document.getElementById('error-msg').textContent = '';
+        document.getElementById('copy-btn').style.display = 'none';
       }
       async function doSearch() {
         const query = document.getElementById('query-input').value.trim();
         if (!query) return;
         document.getElementById('result').textContent = '';
         document.getElementById('error-msg').textContent = '';
+        document.getElementById('copy-btn').style.display = 'none';
         document.getElementById('loading').style.display = 'block';
         document.getElementById('search-btn').disabled = true;
         try {
@@ -68,6 +74,7 @@
           });
           const data = await res.json();
           document.getElementById('result').textContent = data.result;
+          document.getElementById('copy-btn').style.display = 'block';
         } catch (err) {
           document.getElementById('error-msg').textContent = currentLang === 'zh' ? '出现错误，请稍后再试。' : 'An error occurred. Please try again.';
         } finally {
@@ -75,10 +82,21 @@
           document.getElementById('search-btn').disabled = false;
         }
       }
+      function copyResult() {
+        const text = document.getElementById('result').textContent;
+        navigator.clipboard.writeText(text).then(() => {
+          const btn = document.getElementById('copy-btn');
+          btn.textContent = '✓ 已复制';
+          btn.classList.add('copied');
+          setTimeout(() => {
+            btn.textContent = '复制 / Copy';
+            btn.classList.remove('copied');
+          }, 2000);
+        });
+      }
       document.getElementById('query-input').addEventListener('keydown', function(e) {
         if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) doSearch();
       });
     </script>
   </body>
 </html>
-
