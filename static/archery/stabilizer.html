@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stabilizer Calculator · Olympic Recurve</title>
+<style>
+:root {
+  --bg:     #0f1117;
+  --bg2:    #181c26;
+  --bg3:    #1e2330;
+  --border: rgba(255,255,255,0.08);
+  --text:   #e8eaf0;
+  --muted:  #7a8099;
+  --accent: #4a9eff;
+  --green:  #3db87a;
+  --amber:  #e8a030;
+  --red:    #e85050;
+  --teal:   #40c4a0;
+  --gray:   #60687a;
+  --mono:   'Courier New', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { background: var(--bg); color: var(--text); font-family: -apple-system, 'Helvetica Neue', sans-serif; font-size: 13px; }
+body { min-height: 100vh; padding: 0 0 48px; }
+
+/* ── top bar ── */
+.topbar {
+  display: flex; align-items: baseline; gap: 16px;
+  padding: 16px 32px 14px;
+  border-bottom: 0.5px solid var(--border);
+  position: sticky; top: 0; background: var(--bg); z-index: 10;
+}
+.topbar h1 { font-size: 15px; font-weight: 600; letter-spacing: 0.02em; }
+.topbar p  { font-size: 11px; color: var(--muted); }
+.presets { margin-left: auto; display: flex; gap: 6px; }
+.pb {
+  font-size: 11px; padding: 5px 10px;
+  border: 0.5px solid var(--border); border-radius: 6px;
+  background: var(--bg3); color: var(--muted); cursor: pointer;
+}
+.pb:hover { background: var(--bg2); color: var(--text); }
+
+/* ── main grid ── */
+.main {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  grid-template-rows: auto auto;
+  gap: 16px;
+  padding: 20px 32px;
+  max-width: 1400px;
+}
+
+/* ── cards ── */
+.card {
+  background: var(--bg2); border: 0.5px solid var(--border);
+  border-radius: 12px; padding: 18px;
+}
+.card-title {
+  font-size: 10px; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 14px;
+}
+
+/* ── select ── */
+select {
+  width: 100%; background: var(--bg3); border: 0.5px solid var(--border);
+  border-radius: 7px; padding: 8px 10px; font-size: 12px; color: var(--text);
+  margin-bottom: 14px; appearance: none;
+}
+
+/* ── slider rows ── */
+.srow { margin-bottom: 12px; }
+.srow-head { display: flex; justify-content: space-between; margin-bottom: 5px; }
+.srow-label { font-size: 12px; color: var(--muted); }
+.srow-val   { font-size: 12px; font-weight: 600; color: var(--text); }
+input[type=range] {
+  width: 100%; -webkit-appearance: none; appearance: none;
+  height: 3px; background: var(--bg3); border-radius: 2px; outline: none;
+  border: 0.5px solid var(--border);
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 14px; height: 14px;
+  border-radius: 50%; background: var(--accent);
+  border: 2px solid var(--bg); cursor: pointer;
+}
+input[type=range]::-moz-range-thumb {
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--accent); border: 2px solid var(--bg); cursor: pointer;
+}
+
+/* ── result boxes ── */
+.rbox { background: var(--bg3); border-radius: 8px; padding: 10px 12px; }
+.rbox .rl { font-size: 10px; color: var(--muted); margin-bottom: 3px; }
+.rbox .rv { font-size: 20px; font-weight: 700; color: var(--text); line-height: 1; }
+.rbox .ru { font-size: 10px; color: var(--muted); margin-top: 2px; }
+.rbox.accent .rv { color: var(--accent); }
+
+.results-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.results-full { margin-top: 8px; }
+
+/* ── section label ── */
+.sec { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
+.sep { border: none; border-top: 0.5px solid var(--border); margin: 14px 0; }
+
+/* ── top two panels side by side ── */
+.top-left  { grid-column: 1; grid-row: 1; }
+.top-right { grid-column: 2; grid-row: 1; }
+
+/* right panel inner grid for motion sections */
+.motion-grid {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px;
+}
+.motion-section { }
+.motion-result { margin-top: 10px; }
+
+/* ── bottom panels ── */
+.bottom-chart   { grid-column: 1 / -1; grid-row: 2; }
+.bottom-formula { grid-column: 1 / -1; grid-row: 3; }
+
+/* ── zone legend inline ── */
+.zone-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 10px; }
+.leg-item { display: flex; gap: 6px; align-items: center; }
+.leg-dot  { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+.leg-text { font-size: 11px; color: var(--muted); }
+
+/* ── canvas ── */
+canvas { width: 100%; display: block; border-radius: 6px; }
+
+/* ── motion analysis table ── */
+.zone-table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 12px; }
+.zone-table th { font-size: 10px; color: var(--muted); font-weight: 500; text-align: left; padding: 0 8px 8px 0; border-bottom: 0.5px solid var(--border); }
+.zone-table td { padding: 8px 8px 8px 0; border-bottom: 0.5px solid var(--border); vertical-align: top; }
+.zone-table tr:last-child td { border-bottom: none; }
+.zdot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+
+/* ── formulas ── */
+.formula-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.fgroup { }
+.fgroup-title { font-size: 11px; font-weight: 600; color: var(--accent); margin-bottom: 8px; }
+.feq {
+  background: var(--bg3); border-radius: 6px;
+  padding: 7px 10px; font-family: var(--mono); font-size: 11px;
+  color: var(--text); margin-bottom: 4px; line-height: 1.6;
+}
+.fnote { font-size: 10px; color: var(--muted); line-height: 1.5; margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>Stabilizer Calculator</h1>
+  <p>Olympic recurve · frequency response analysis</p>
+</div>
+
+<div class="main">
+
+  <!-- ── LEFT: ROD PARAMETERS ── -->
+  <div class="card top-left">
+    <div class="card-title">stabilizer parameters</div>
+
+    <div class="presets" style="margin-bottom:14px;">
+      <button class="pb" onclick="loadPreset(0)">30″ long rod</button>
+      <button class="pb" onclick="loadPreset(1)">12″ side rod</button>
+      <button class="pb" onclick="loadPreset(2)">4″ short rod</button>
+    </div>
+
+    <select id="material" onchange="calc()">
+      <option value="uhm_carbon">Ultra high modulus carbon (UHM · 450 GPa)</option>
+      <option value="hm_carbon">High modulus carbon (HM · 300 GPa)</option>
+      <option value="std_carbon">Standard carbon (150 GPa)</option>
+      <option value="al7075">Aluminum 7075 · 72 GPa (solid)</option>
+      <option value="al6xxx">Aluminum 6xxx · 69 GPa (solid)</option>
+    </select>
+
+    <div class="srow">
+      <div class="srow-head"><span class="srow-label">Length</span><span class="srow-val" id="length-v">30.0 in</span></div>
+      <input type="range" id="length" min="2" max="36" value="30" step="0.5" oninput="calc()">
+    </div>
+    <div class="srow">
+      <div class="srow-head"><span class="srow-label">Outer diameter</span><span class="srow-val" id="od-v">15.0 mm</span></div>
+      <input type="range" id="od" min="6" max="30" value="15" step="0.5" oninput="calc()">
+    </div>
+    <div id="cf-row" class="srow">
+      <div class="srow-head"><span class="srow-label">Wall thickness</span><span class="srow-val" id="wall-v">2.0 mm</span></div>
+      <input type="range" id="wall" min="0.5" max="6" value="2" step="0.1" oninput="calc()">
+    </div>
+
+    <div style="display:flex;align-items:center;gap:0;margin-bottom:10px;border:0.5px solid var(--border);border-radius:7px;overflow:hidden;">
+      <button id="mode-computed" onclick="setMassMode('computed')"
+        style="flex:1;padding:6px 0;font-size:11px;background:var(--accent);color:#fff;border:none;cursor:pointer;">
+        from material
+      </button>
+      <button id="mode-measured" onclick="setMassMode('measured')"
+        style="flex:1;padding:6px 0;font-size:11px;background:var(--bg3);color:var(--muted);border:none;cursor:pointer;">
+        measured weight
+      </button>
+    </div>
+
+    <div id="row-computed" class="srow" style="margin-bottom:6px;">
+      <div style="font-size:10px;color:var(--muted);padding:4px 0;">
+        m_rod computed from ρ · A · L using material density and cross-section above.
+        Result: <span id="mrod-computed-v" style="color:var(--text);font-weight:600;">—</span>
+      </div>
+    </div>
+
+    <div id="row-measured" class="srow" style="display:none;">
+      <div class="srow-head">
+        <span class="srow-label">
+          Rod weight
+          <span style="font-size:10px;color:var(--muted);font-weight:400;"> — rod body only; end cap → tip weight</span>
+        </span>
+        <span class="srow-val" id="rodwt-v">80 g</span>
+      </div>
+      <input type="range" id="rodwt" min="20" max="400" value="80" step="1" oninput="calc()">
+    </div>
+
+    <div class="srow">
+      <div class="srow-head">
+        <span class="srow-label">
+          Tip weight
+          <span style="font-size:10px;color:var(--muted);font-weight:400;"> — include end cap</span>
+        </span>
+        <span class="srow-val" id="tip-v">6.0 oz</span>
+      </div>
+      <input type="range" id="tip" min="0" max="24" value="6" step="0.5" oninput="calc()">
+    </div>
+
+    <div class="results-2">
+      <div class="rbox accent">
+        <div class="rl">resonant freq. f₀</div>
+        <div class="rv" id="rod-freq">—</div>
+        <div class="ru">Hz</div>
+      </div>
+      <div class="rbox">
+        <div class="rl">total mass</div>
+        <div class="rv" id="rod-mass">—</div>
+        <div class="ru">g</div>
+      </div>
+    </div>
+
+    <div class="results-full">
+      <div class="rbox" style="margin-top:8px;">
+        <div class="rl">rigid body MOI — J_rigid (from rod base)</div>
+        <div style="display:flex;align-items:baseline;gap:6px;margin-top:4px;flex-wrap:wrap;">
+          <span class="rv" id="j-rigid" style="font-size:18px;">—</span>
+          <span style="font-size:11px;color:var(--muted);">g·m²</span>
+        </div>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px;">
+          rod (m·L²/3): <span id="j-rod-part">—</span> &nbsp;+&nbsp; tip (m·L²): <span id="j-tip-part">—</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RIGHT: MOTION FREQUENCIES ── -->
+  <div class="card top-right">
+    <div class="card-title">motion frequencies</div>
+    <div class="motion-grid">
+
+      <div class="motion-section">
+        <div class="sec">Aiming</div>
+        <div class="srow">
+          <div class="srow-head"><span class="srow-label">Frequency</span><span class="srow-val" id="f-aim-v">1.0 Hz</span></div>
+          <input type="range" id="f-aim" min="0.5" max="10" value="1" step="0.1" oninput="calc()">
+        </div>
+        <div class="motion-result">
+          <div class="rbox">
+            <div class="rl">aiming freq.</div>
+            <div class="rv" id="f-aim-out" style="color:var(--green)">—</div>
+            <div class="ru">Hz</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="motion-section">
+        <div class="sec">Arrow launch</div>
+        <div class="srow">
+          <div class="srow-head"><span class="srow-label">Draw weight</span><span class="srow-val" id="dw-v">40 lb</span></div>
+          <input type="range" id="dw" min="20" max="60" value="40" step="1" oninput="calc()">
+        </div>
+        <div class="srow">
+          <div class="srow-head"><span class="srow-label">Draw length</span><span class="srow-val" id="dl-v">30.0 in</span></div>
+          <input type="range" id="dl" min="24" max="32" value="30" step="0.5" oninput="calc()">
+        </div>
+        <div class="srow">
+          <div class="srow-head"><span class="srow-label">Brace height</span><span class="srow-val" id="bh-v">9.0 in</span></div>
+          <input type="range" id="bh" min="7" max="11" value="9" step="0.25" oninput="calc()">
+        </div>
+        <div class="srow">
+          <div class="srow-head"><span class="srow-label">Arrow weight</span><span class="srow-val" id="aw-v">330 gr</span></div>
+          <input type="range" id="aw" min="200" max="600" value="330" step="5" oninput="calc()">
+        </div>
+        <div class="motion-result">
+          <div class="rbox">
+            <div class="rl">launch freq.</div>
+            <div class="rv" id="f-launch" style="color:var(--amber)">—</div>
+            <div class="ru">Hz</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="motion-section">
+        <div class="sec">Release</div>
+        <div class="srow">
+          <div class="srow-head"><span class="srow-label">Hook depth</span><span class="srow-val" id="hook-v">1.00 cm</span></div>
+          <input type="range" id="hook" min="0.3" max="2.5" value="1.0" step="0.05" oninput="calc()">
+        </div>
+        <div class="motion-result">
+          <div class="rbox">
+            <div class="rl">release freq.</div>
+            <div class="rv" id="f-release" style="color:var(--red)">—</div>
+            <div class="ru">Hz</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /motion-grid -->
+  </div>
+
+  <!-- ── BOTTOM: FREQUENCY RESPONSE ── -->
+  <div class="card bottom-chart">
+    <div class="card-title">frequency response — stabilizer behavior at each motion frequency</div>
+
+    <canvas id="response-chart" height="200"></canvas>
+
+    <div class="zone-legend">
+      <div class="leg-item"><div class="leg-dot" style="background:#00ff88;"></div><div class="leg-text">① pre-resonance damping (0.15–0.70 f₀) — best: J_eff &gt; J_rigid</div></div>
+      <div class="leg-item"><div class="leg-dot" style="background:#27ae60;"></div><div class="leg-text">② rigid body (f &lt; 0.15 f₀) — good: no residual oscillation</div></div>
+      <div class="leg-item"><div class="leg-dot" style="background:#4a5568;"></div><div class="leg-text">③ transparent (f &gt; 3 f₀) — neutral: rod too slow, no effect</div></div>
+      <div class="leg-item"><div class="leg-dot" style="background:#ff8c00;"></div><div class="leg-text">④ post-resonance (1.40–3.00 f₀) — bad: J_eff negative, slight amplification</div></div>
+      <div class="leg-item"><div class="leg-dot" style="background:#ff2222;"></div><div class="leg-text">⑤ resonance (0.70–1.40 f₀) — worst: strong amplification, avoid</div></div>
+    </div>
+
+    <table class="zone-table">
+      <thead>
+        <tr>
+          <th>Motion</th>
+          <th>Frequency</th>
+          <th>r = f / f₀</th>
+          <th>Zone</th>
+          <th>J_eff</th>
+          <th>J_eff / J_rigid</th>
+        </tr>
+      </thead>
+      <tbody id="zone-tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- ── FORMULAS ── -->
+  <div class="card bottom-formula">
+    <div class="card-title">formulas</div>
+    <div class="formula-grid">
+
+      <div>
+        <div class="fgroup">
+          <div class="fgroup-title">Cross-section geometry</div>
+          <div class="feq">I = π/4 · (r_o⁴ − r_i⁴)  [m⁴]</div>
+          <div class="feq">A = π · (r_o² − r_i²)  [m²]</div>
+          <div class="fnote">r_o = outer radius, r_i = inner radius (0 for solid). Carbon = hollow tube. Aluminum = solid.</div>
+        </div>
+        <div class="fgroup" style="margin-top:14px;">
+          <div class="fgroup-title">Cantilever stiffness</div>
+          <div class="feq">k = 3·E·I / L³  [N/m]</div>
+          <div class="fnote">E = Young's modulus. L = length. Fixed-free cantilever.</div>
+        </div>
+        <div class="fgroup" style="margin-top:14px;">
+          <div class="fgroup-title">Effective mass &amp; resonant frequency</div>
+          <div class="feq">m_rod = ρ · A · L</div>
+          <div class="feq">m_eff = (33/140)·m_rod + m_tip</div>
+          <div class="feq">f₀ = (1/2π) · √(k / m_eff)  [Hz]</div>
+          <div class="fnote">33/140: Rayleigh effective mass fraction for cantilever with tip mass.</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="fgroup">
+          <div class="fgroup-title">Rigid body MOI (from rod base)</div>
+          <div class="feq">J_rod = m_rod · L² / 3  [kg·m²]</div>
+          <div class="feq">J_tip = m_tip · L²</div>
+          <div class="feq">J_rigid = J_rod + J_tip</div>
+          <div class="fnote">Continuous integral ∫ρA·x²dx for uniform rod. Tip mass treated as point mass at x = L.</div>
+        </div>
+        <div class="fgroup" style="margin-top:14px;">
+          <div class="fgroup-title">Arrow launch frequency</div>
+          <div class="feq">stroke = draw_len − brace_ht</div>
+          <div class="feq">a = F / m_arrow  (F = draw_weight × 4.448 N)</div>
+          <div class="feq">t_launch = √(2·stroke / a)</div>
+          <div class="feq">f_launch = 1 / t_launch  [Hz]</div>
+          <div class="fnote">Constant-force approximation (linear limb). Typical: 80–130 Hz.</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="fgroup">
+          <div class="fgroup-title">Release frequency</div>
+          <div class="feq">a = F / m_finger  (m_finger ≈ 12 g)</div>
+          <div class="feq">t_release = √(2 · hook_depth / a)</div>
+          <div class="feq">f_release = 1 / t_release  [Hz]</div>
+          <div class="fnote">Finger slip modeled as point mass accelerated over hook depth. Deeper hook → longer slip time → lower f_release. Typical: 300–1500 Hz.</div>
+        </div>
+        <div class="fgroup" style="margin-top:14px;">
+          <div class="fgroup-title">Frequency response &amp; effective MOI  (r = f / f₀)</div>
+          <div class="feq">|H(r)| = 1 / |1 − r²|  (undamped SDOF)</div>
+          <div class="feq">J_eff = J_rigid / (1 − r²)</div>
+          <div class="feq">r &lt; 0.15 → rigid body</div>
+          <div class="feq">0.15–0.70 → pre-resonance, J_eff &gt; J_rigid</div>
+          <div class="feq">0.70–1.40 → resonance, J_eff → ±∞</div>
+          <div class="feq">1.40–3.00 → post-resonance, J_eff &lt; 0 (phase reversed)</div>
+          <div class="feq">r ≥ 3.00  → transparent, J_eff → 0</div>
+          <div class="fnote">Negative J_eff in post-resonance zone = 180° phase reversal. Magnitude decays rapidly — attenuation remains, but weaker than pre-resonance zone. Transparent zone: f₀ too low (rod too flexible/heavy), rod cannot follow excitation.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+const MAT={
+  uhm_carbon:{E:450e9,rho:1750,solid:false},
+  hm_carbon: {E:300e9,rho:1650,solid:false},
+  std_carbon:{E:150e9,rho:1550,solid:false},
+  al7075:    {E:72e9, rho:2810,solid:true},
+  al6xxx:    {E:69e9, rho:2700,solid:true},
+};
+const IN=0.0254,OZ_KG=0.0283495,GRAIN_KG=6.47989e-5;
+const ZONES=[
+  {lo:0,    hi:0.15,col:'#27ae60',label:'rigid body — full stabilization'},
+  {lo:0.15, hi:0.70,col:'#00ff88',label:'pre-resonance damping — optimal'},
+  {lo:0.70, hi:1.40,col:'#ff2222',label:'resonance — amplification'},
+  {lo:1.40, hi:3.00,col:'#ff8c00',label:'post-resonance — negative J_eff, slight amplification'},
+  {lo:3.00, hi:1e9, col:'#4a5568',label:'transparent — rod too slow, neutral'},
+];
+function gv(id){return parseFloat(document.getElementById(id).value);}
+function st(id,v){document.getElementById(id).textContent=v;}
+function getZone(f,f0){const r=f0>0?f/f0:999;return ZONES.find(z=>r>=z.lo&&r<z.hi)||ZONES[4];}
+
+let massMode='computed';
+function setMassMode(m){
+  massMode=m;
+  document.getElementById('mode-computed').style.background=m==='computed'?'var(--accent)':'var(--bg3)';
+  document.getElementById('mode-computed').style.color=m==='computed'?'#fff':'var(--muted)';
+  document.getElementById('mode-measured').style.background=m==='measured'?'var(--accent)':'var(--bg3)';
+  document.getElementById('mode-measured').style.color=m==='measured'?'#fff':'var(--muted)';
+  document.getElementById('row-computed').style.display=m==='computed'?'block':'none';
+  document.getElementById('row-measured').style.display=m==='measured'?'block':'none';
+  calc();
+}
+
+function calcRod(){
+  const mat=MAT[document.getElementById('material').value];
+  const L=gv('length')*IN,od=gv('od')*1e-3,wall=gv('wall')*1e-3,tip_kg=gv('tip')*OZ_KG;
+  const ro=od/2,ri=mat.solid?0:ro-wall;
+  const A=Math.PI*(ro*ro-ri*ri);
+  const I=Math.PI/4*(Math.pow(ro,4)-Math.pow(ri,4));
+  const mrod_computed=mat.rho*A*L;
+  const mrod=massMode==='measured'?gv('rodwt')*1e-3:mrod_computed;
+  const meff=mrod*33/140+tip_kg;
+  const k=3*mat.E*I/Math.pow(L,3);
+  const f0=meff>0?(1/(2*Math.PI))*Math.sqrt(k/meff):0;
+  const J_rod=mrod*L*L/3;
+  const J_tip=tip_kg*L*L;
+  return{f0,m_g:(mrod+tip_kg)*1000,J_rigid:J_rod+J_tip,J_rod,J_tip,mrod_computed_g:mrod_computed*1000};
+}
+function calcLaunch(){
+  const F=gv('dw')*4.44822,stroke=(gv('dl')-gv('bh'))*IN;
+  const a=F/(gv('aw')*GRAIN_KG),t=Math.sqrt(2*stroke/a);
+  return t>0?1/t:0;
+}
+function calcRelease(){
+  const F=gv('dw')*4.44822,hook=gv('hook')*0.01;
+  const t=Math.sqrt(2*hook/(F/0.012));
+  return t>0?1/t:0;
+}
+
+function drawChart(f0,fAim,fLaunch,fRelease,J_rigid){
+  const canvas=document.getElementById('response-chart');
+  const ctx=canvas.getContext('2d');
+  const W=canvas.offsetWidth||900;
+  const H=200;
+  canvas.width=W*devicePixelRatio; canvas.height=H*devicePixelRatio;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.scale(devicePixelRatio,devicePixelRatio);
+  const P={l:40,r:16,t:14,b:32};
+  const CW=W-P.l-P.r,CH=H-P.t-P.b;
+  ctx.clearRect(0,0,W,H);
+  const maxF=Math.max(fRelease*1.5,f0*4,1000);
+  const lMin=Math.log10(0.3),lMax=Math.log10(maxF);
+  const xFor=f=>P.l+(Math.log10(Math.max(f,0.31))-lMin)/(lMax-lMin)*CW;
+
+  ZONES.forEach(z=>{
+    const fl=f0*z.lo,fh=Math.min(f0*z.hi,maxF*1.1);
+    if(fh<0.31||fl>maxF)return;
+    const x1=xFor(Math.max(fl,0.31)),x2=xFor(fh);
+    ctx.fillStyle=z.col;ctx.globalAlpha=0.15;
+    ctx.fillRect(x1,P.t,Math.max(x2-x1,0),CH);ctx.globalAlpha=1;
+  });
+
+  ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=0.5;
+  [0.3,1,3,10,30,100,300,1000,3000,10000].forEach(f=>{
+    if(f>=maxF)return;
+    const x=xFor(f);
+    ctx.beginPath();ctx.moveTo(x,P.t);ctx.lineTo(x,P.t+CH);ctx.stroke();
+    ctx.fillStyle='#60687a';ctx.font='10px sans-serif';ctx.textAlign='center';
+    ctx.fillText(f>=1000?f/1000+'k':String(f),x,P.t+CH+16);
+  });
+  ctx.fillStyle='#60687a';ctx.font='10px sans-serif';ctx.textAlign='center';
+  ctx.fillText('frequency (Hz, log scale)',P.l+CW/2,P.t+CH+28);
+  ctx.strokeStyle='rgba(255,255,255,0.12)';ctx.lineWidth=0.5;
+  ctx.beginPath();ctx.moveTo(P.l,P.t+CH);ctx.lineTo(P.l+CW,P.t+CH);ctx.stroke();
+
+  if(f0>0.3&&f0<maxF){
+    const xf=xFor(f0);
+    ctx.strokeStyle='rgba(255,255,255,0.25)';ctx.lineWidth=1;ctx.setLineDash([]);
+    ctx.beginPath();ctx.moveTo(xf,P.t);ctx.lineTo(xf,P.t+CH);ctx.stroke();
+    ctx.fillStyle='#aaa';ctx.font='10px sans-serif';ctx.textAlign='center';
+    ctx.fillText('f₀ = '+f0.toFixed(1)+' Hz',xf,P.t+CH-4);
+  }
+
+  const markers=[
+    {f:fAim,    lbl:'aim',     y:22},
+    {f:fLaunch, lbl:'launch',  y:40},
+    {f:fRelease,lbl:'release', y:58},
+  ];
+  markers.forEach(m=>{
+    if(m.f<=0.3)return;
+    const x=xFor(m.f),z=getZone(m.f,f0);
+    ctx.strokeStyle=z.col;ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+    ctx.beginPath();ctx.moveTo(x,P.t);ctx.lineTo(x,P.t+CH);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle=z.col;ctx.font='500 11px sans-serif';ctx.textAlign='center';
+    ctx.fillText(m.lbl,x,P.t+m.y);
+    // ratio label
+    if(f0>0){
+      const r=m.f/f0,denom=1-r*r;
+      let ratioTxt;
+      if(Math.abs(denom)<0.05){ratioTxt='≈±∞';}
+      else{const ratio=1/denom;ratioTxt=(ratio<0?'−':'')+Math.abs(ratio).toFixed(2)+'×';}
+      ctx.font='10px sans-serif';ctx.globalAlpha=0.8;
+      ctx.fillText(ratioTxt,x,P.t+m.y+13);ctx.globalAlpha=1;
+    }
+  });
+}
+
+function calc(){
+  const isSolid=MAT[document.getElementById('material').value].solid;
+  document.getElementById('cf-row').style.opacity=isSolid?0.35:1;
+  const {f0,m_g,J_rigid,J_rod,J_tip,mrod_computed_g}=calcRod();
+  const fAim=gv('f-aim'),fLaunch=calcLaunch(),fRelease=calcRelease();
+
+  st('length-v',gv('length').toFixed(1)+' in');
+  st('od-v',gv('od').toFixed(1)+' mm');
+  st('wall-v',gv('wall').toFixed(1)+' mm');
+  st('rodwt-v',gv('rodwt').toFixed(0)+' g');
+  st('mrod-computed-v',mrod_computed_g.toFixed(1)+' g');
+  st('tip-v',gv('tip').toFixed(1)+' oz');
+  st('f-aim-v',fAim.toFixed(1)+' Hz');
+  st('f-aim-out',fAim.toFixed(1));
+  st('dw-v',gv('dw').toFixed(0)+' lb');
+  st('dl-v',gv('dl').toFixed(1)+' in');
+  st('bh-v',gv('bh').toFixed(2)+' in');
+  st('aw-v',gv('aw').toFixed(0)+' gr');
+  st('hook-v',gv('hook').toFixed(2)+' cm');
+  st('rod-freq',f0.toFixed(1));
+  st('rod-mass',m_g.toFixed(1));
+  st('f-launch',fLaunch.toFixed(1));
+  st('f-release',fRelease.toFixed(0));
+  st('j-rigid',(J_rigid*1000).toFixed(4));
+  st('j-rod-part',(J_rod*1000).toFixed(4)+' g·m²');
+  st('j-tip-part',(J_tip*1000).toFixed(4)+' g·m²');
+
+  drawChart(f0,fAim,fLaunch,fRelease,J_rigid);
+
+  const tbody=document.getElementById('zone-tbody');
+  const motions=[
+    {name:'Aiming',   f:fAim,    color:'#2ecc71'},
+    {name:'Launch',   f:fLaunch, color:'#e8a030'},
+    {name:'Release',  f:fRelease,color:'#e85050'},
+  ];
+  tbody.innerHTML=motions.map(m=>{
+    const z=getZone(m.f,f0);
+    const rNum=f0>0?m.f/f0:0;
+    const rStr=rNum.toFixed(3);
+    let jeffStr='—',ratioStr='—';
+    if(f0>0){
+      const denom=1-rNum*rNum;
+      if(Math.abs(denom)<0.05){jeffStr='≈ ±∞';ratioStr='≈ ±∞';}
+      else{
+        const ratio=1/denom,jeff=J_rigid*ratio;
+        const sign=ratio<0?'−':'';
+        jeffStr=sign+(Math.abs(jeff)*1000).toFixed(4)+' g·m²';
+        ratioStr=(ratio<0?'−':'')+Math.abs(ratio).toFixed(3)+'×';
+      }
+    }
+    return `<tr>
+      <td><span class="zdot" style="background:${m.color}"></span><strong>${m.name}</strong></td>
+      <td>${m.f.toFixed(1)} Hz</td>
+      <td>${rStr}</td>
+      <td style="color:${z.col}">${z.label}</td>
+      <td style="font-family:var(--mono);font-size:11px;">${jeffStr}</td>
+      <td style="font-family:var(--mono);font-size:11px;color:${z.col}">${ratioStr}</td>
+    </tr>`;
+  }).join('');
+}
+
+const PRESETS=[
+  {mat:'uhm_carbon',len:30,od:15,wall:2,rodwt:80, tip:6},
+  {mat:'uhm_carbon',len:12,od:15,wall:2,rodwt:40, tip:12},
+  {mat:'al7075',    len:4, od:15,wall:2,rodwt:60, tip:6},
+];
+function loadPreset(i){
+  const p=PRESETS[i];
+  document.getElementById('material').value=p.mat;
+  document.getElementById('length').value=p.len;
+  document.getElementById('od').value=p.od;
+  document.getElementById('wall').value=p.wall;
+  document.getElementById('rodwt').value=p.rodwt;
+  document.getElementById('tip').value=p.tip;
+  calc();
+}
+window.addEventListener('resize',calc);
+calc();
+</script>
+</body>
+</html>
